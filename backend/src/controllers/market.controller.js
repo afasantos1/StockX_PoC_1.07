@@ -21,7 +21,7 @@ const getTokens = async (req, res, next) => {
     const tokens = await tokenService.getTokens(filters);
     const total = await tokenService.countTokens();
 
-    res.json({ 
+    res.json({
       tokens: tokens.map(token => tokenService.formatToken(token)),
       total,
       limit: filters.limit,
@@ -35,14 +35,14 @@ const getTokens = async (req, res, next) => {
 const getTokenBySymbol = async (req, res, next) => {
   try {
     const token = await tokenService.getTokenBySymbol(req.params.symbol);
-    
+
     if (!token) {
       return res.status(404).json({ error: 'Token not found' });
     }
 
     const priceHistory = await marketService.getPriceHistory(req.params.symbol, '24h');
 
-    res.json({ 
+    res.json({
       token: tokenService.formatToken(token),
       priceHistory
     });
@@ -58,10 +58,26 @@ const getPriceHistory = async (req, res, next) => {
 
     const priceHistory = await marketService.getPriceHistory(symbol, period);
 
-    res.json({ 
+    res.json({
       symbol,
       period,
       history: priceHistory
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getMarketSummary = async (req, res, next) => {
+  try {
+    const tokensListed = await tokenService.countTokens();
+    const marketData = await marketService.getMarketData();
+
+    res.json({
+      tokensListed,
+      totalTrades: marketData.totalTrades,
+      totalVolume: marketData.totalVolume,
+      generatedAt: new Date().toISOString(),
     });
   } catch (error) {
     next(error);
@@ -73,4 +89,5 @@ module.exports = {
   getTokens,
   getTokenBySymbol,
   getPriceHistory,
+  getMarketSummary,
 };
